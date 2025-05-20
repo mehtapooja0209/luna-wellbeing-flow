@@ -41,21 +41,23 @@ export const getCyclePhase = (cycleData: CycleData, date: Date): CyclePhase => {
 
 // Get information about the current day in the cycle
 export const getDayInfo = (cycleData: CycleData, date: Date): CycleDay => {
-  const dateStr = format(date, 'yyyy-MM-dd');
+  // Ensure date is a Date object
+  const safeDate = date instanceof Date ? date : new Date();
+  const dateStr = format(safeDate, 'yyyy-MM-dd');
   
   if (cycleData.entries[dateStr]) {
     return cycleData.entries[dateStr];
   }
   
   const lastPeriodStart = parseISO(cycleData.lastPeriodStart);
-  const daysSinceLastPeriod = Math.floor((date.getTime() - lastPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
+  const daysSinceLastPeriod = Math.floor((safeDate.getTime() - lastPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
   
   // Calculate which cycle this is and the day within that cycle
   const cycleOffset = Math.floor(daysSinceLastPeriod / cycleData.averageCycleLength);
   const thisCycleStart = addDays(lastPeriodStart, cycleOffset * cycleData.averageCycleLength);
-  const dayOfCycle = Math.floor((date.getTime() - thisCycleStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const dayOfCycle = Math.floor((safeDate.getTime() - thisCycleStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   
-  const phase = getCyclePhase(cycleData, date);
+  const phase = getCyclePhase(cycleData, safeDate);
   const isMenstruation = phase === 'menstrual';
   
   return {
@@ -105,7 +107,9 @@ export const getSuggestionForPhase = (phase: CyclePhase): string => {
 
 // Function to get a moon phase emoji representation (simplified)
 export const getMoonPhaseEmoji = (cycleData: CycleData, date: Date): string => {
-  const { dayOfCycle } = getDayInfo(cycleData, date);
+  // Ensure date is a Date object
+  const safeDate = date instanceof Date ? date : new Date();
+  const { dayOfCycle } = getDayInfo(cycleData, safeDate);
   const totalPhases = 8; // Simplified moon representation with 8 phases
   const phaseIndex = Math.floor((dayOfCycle - 1) / cycleData.averageCycleLength * totalPhases) % totalPhases;
   
