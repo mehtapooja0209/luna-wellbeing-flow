@@ -1,12 +1,86 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { loadUserData } from '@/lib/dataStorage';
+import { getDayInfo, getMoonPhaseEmoji } from '@/lib/cycleUtils';
+import { getMoodEntriesForDate } from '@/lib/dataStorage';
+import { Toaster } from '@/components/ui/toaster';
+
+import AppHeader from '@/components/AppHeader';
+import CyclePhaseIndicator from '@/components/CyclePhaseIndicator';
+import DailySuggestion from '@/components/DailySuggestion';
+import MoodLogger from '@/components/MoodLogger';
+import MoodHistory from '@/components/MoodHistory';
+import CalendarView from '@/components/CalendarView';
+import CycleSetupDialog from '@/components/CycleSetupDialog';
 
 const Index = () => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [userData, setUserData] = useState(loadUserData());
+  const [isSetupOpen, setIsSetupOpen] = useState(false);
+  const [moodEntries, setMoodEntries] = useState(getMoodEntriesForDate(selectedDate));
+  
+  // Get day info for the selected date
+  const dayInfo = getDayInfo(userData.cycleData, selectedDate);
+  
+  // Check if we need to show the setup dialog on first launch
+  useEffect(() => {
+    const isFirstTimeUser = !localStorage.getItem('cycle_app_user_data');
+    if (isFirstTimeUser) {
+      setIsSetupOpen(true);
+    }
+  }, []);
+  
+  // Update when date changes
+  useEffect(() => {
+    setMoodEntries(getMoodEntriesForDate(selectedDate));
+  }, [selectedDate]);
+  
+  // Refresh data when needed
+  const refreshData = () => {
+    setUserData(loadUserData());
+    setMoodEntries(getMoodEntriesForDate(selectedDate));
+  };
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="min-h-screen cycle-bg-gradient">
+      <div className="container max-w-md mx-auto px-4 py-6">
+        <AppHeader 
+          date={selectedDate} 
+          cycleData={userData.cycleData}
+          onOpenSetup={() => setIsSetupOpen(true)}
+        />
+        
+        <div className="space-y-6 animate-fade-in">
+          <CyclePhaseIndicator 
+            phase={dayInfo.phase} 
+            dayOfCycle={dayInfo.dayOfCycle}
+            className="mb-4"
+          />
+          
+          <DailySuggestion phase={dayInfo.phase} />
+          
+          <CalendarView 
+            cycleData={userData.cycleData}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+          />
+          
+          <MoodLogger />
+          
+          <MoodHistory entries={moodEntries} />
+        </div>
+        
+        <CycleSetupDialog 
+          isOpen={isSetupOpen} 
+          onClose={() => {
+            setIsSetupOpen(false);
+            refreshData();
+          }} 
+        />
       </div>
+      
+      <Toaster />
     </div>
   );
 };
