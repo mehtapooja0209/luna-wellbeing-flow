@@ -104,10 +104,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                   ${day.isSelected ? 'ring-2 ring-cycle-lavender' : ''}
                   ${phaseColorClass} hover:opacity-80
                 `}
+                title={day.detailedPhase ? `${day.detailedPhase}: ${day.cognition}` : ''}
               >
                 <span>{day.dayOfMonth}</span>
                 <span className="text-xs">
-                  {/* Ensure a Date object is passed to getMoonPhaseEmoji */}
                   {getMoonPhaseEmoji(cycleData, day.date)}
                 </span>
                 {day.isMenstruation && (

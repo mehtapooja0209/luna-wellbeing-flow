@@ -1,6 +1,44 @@
 
-import { CycleData, CycleDay, CyclePhase } from './types';
+import { CycleData, CycleDay, CyclePhase, DetailedCyclePhase } from './types';
 import { addDays, format, isBefore, isEqual, parseISO, subDays } from 'date-fns';
+
+// Detailed cycle data
+const detailedCycleData: Record<number, {
+  detailedPhase: DetailedCyclePhase;
+  hormoneState: string;
+  cognition: string;
+  optimal: string;
+  avoid: string;
+}> = {
+  1: { detailedPhase: 'Early Follicular', hormoneState: '↓ E₂, ↓ P₄', cognition: 'Very low dynamical complexity; mental fog', optimal: 'Gentle recovery: light stretching, deep breathing, journaling', avoid: 'High-focus work, heavy socializing' },
+  2: { detailedPhase: 'Early Follicular', hormoneState: '↓ E₂, ↓ P₄', cognition: 'Low energy; mood dipped', optimal: 'Self-care, reflection, planning', avoid: 'Deadline-driven tasks' },
+  3: { detailedPhase: 'Early Follicular', hormoneState: '↓ E₂, ↓ P₄', cognition: 'Gradual arousal of networks', optimal: 'Creative brainstorming (low pressure)', avoid: 'Intense workouts' },
+  4: { detailedPhase: 'Early Follicular', hormoneState: '↓ E₂, ↓ P₄', cognition: 'Attention still sluggish', optimal: 'Skill-learning at easy pace', avoid: 'Complex problem-solving' },
+  5: { detailedPhase: 'Early Follicular', hormoneState: '↓ E₂, ↓ P₄', cognition: 'Executive control still low', optimal: 'Mindful walking, art therapy', avoid: 'High-stakes meetings' },
+  6: { detailedPhase: 'Early Follicular', hormoneState: '↓ E₂, ↓ P₄', cognition: 'Slow ramp of connectivity', optimal: 'Light cardio, social check-ins', avoid: 'Marathon training' },
+  7: { detailedPhase: 'Early Follicular', hormoneState: '↓ E₂, ↓ P₄', cognition: 'Approaching mid-fog', optimal: 'Gentle yoga, outline week ahead', avoid: 'New project launches' },
+  8: { detailedPhase: 'Pre-Ovulatory', hormoneState: '↑ E₂, ↓ P₄', cognition: 'Rapid rise in whole-brain complexity', optimal: 'Brainstorming, negotiation, creative work', avoid: 'Overly routine/admin tasks' },
+  9: { detailedPhase: 'Pre-Ovulatory', hormoneState: '↑ E₂, ↓ P₄', cognition: 'Peak cognitive flexibility', optimal: 'Complex problem-solving, public speaking', avoid: 'Monotonous chores' },
+  10: { detailedPhase: 'Pre-Ovulatory', hormoneState: '↑ E₂, ↓ P₄', cognition: 'High verbal fluency, memory recall', optimal: 'Presentations, writing reports', avoid: 'Passive learning' },
+  11: { detailedPhase: 'Pre-Ovulatory', hormoneState: '↑ E₂, ↓ P₄', cognition: 'Strong executive control', optimal: 'Strategic planning, leadership meetings', avoid: 'Social conflict resolution (if avoidable)' },
+  12: { detailedPhase: 'Pre-Ovulatory', hormoneState: '↑ E₂, ↓ P₄', cognition: 'High energy, motivation', optimal: 'Intense workouts, networking', avoid: 'Overcommitment' },
+  13: { detailedPhase: 'Pre-Ovulatory', hormoneState: '↑ E₂, ↓ P₄', cognition: 'Peak alertness', optimal: 'Risk-managed challenges, learning new skills', avoid: 'Emotional heavy lifting' },
+  14: { detailedPhase: 'Pre-Ovulatory', hormoneState: '↑ E₂, ↓ P₄', cognition: 'Top dynamical complexity', optimal: 'Creative sprints, innovation labs', avoid: 'Repetitive tasks' },
+  15: { detailedPhase: 'Mid-Luteal', hormoneState: '↑ P₄, ↔ E₂', cognition: 'Complex but region-specific shifts', optimal: 'Collaborative team work', avoid: 'High-risk decisions' },
+  16: { detailedPhase: 'Mid-Luteal', hormoneState: '↑ P₄, ↔ E₂', cognition: 'Emotional salience ↑', optimal: 'Empathy-driven tasks, mentoring', avoid: 'Confrontations' },
+  17: { detailedPhase: 'Mid-Luteal', hormoneState: '↑ P₄, ↔ E₂', cognition: 'Slight drop in focus', optimal: 'Moderate exercise, creative hobbies', avoid: 'Intense concentration work' },
+  18: { detailedPhase: 'Mid-Luteal', hormoneState: '↑ P₄, ↔ E₂', cognition: 'Some somatomotor↓ (fatigue)', optimal: 'Restorative yoga, low-impact sports', avoid: 'HIIT workouts' },
+  19: { detailedPhase: 'Mid-Luteal', hormoneState: '↑ P₄, ↔ E₂', cognition: 'Memory for emotional events ↑', optimal: 'Storytelling, relationship-building', avoid: 'Technical deep-dives' },
+  20: { detailedPhase: 'Mid-Luteal', hormoneState: '↑ P₄, ↔ E₂', cognition: 'Mood lability risk begins', optimal: 'Self-reflection, creative writing', avoid: 'Critical negotiations' },
+  21: { detailedPhase: 'Mid-Luteal', hormoneState: '↑ P₄, ↔ E₂', cognition: 'Anxiety spike possible', optimal: 'Calming practices (meditation, nature walks)', avoid: 'Overstimulating environments' },
+  22: { detailedPhase: 'Late Luteal (PME)', hormoneState: '↑ P₄, ↓ E₂', cognition: 'Dynamical complexity ↓', optimal: 'Gentle self-care, light social support', avoid: 'Large presentations, intense workouts' },
+  23: { detailedPhase: 'Late Luteal (PME)', hormoneState: '↑ P₄, ↓ E₂', cognition: 'Emotional reactivity ↑', optimal: 'Journaling feelings, soothing music', avoid: 'High-pressure tasks' },
+  24: { detailedPhase: 'Late Luteal (PME)', hormoneState: '↑ P₄, ↓ E₂', cognition: 'Cognitive fog returns', optimal: 'Rest, low-stimulus activities', avoid: 'Strategic planning' },
+  25: { detailedPhase: 'Late Luteal (PME)', hormoneState: '↑ P₄, ↓ E₂', cognition: 'Irritability peak', optimal: 'Social support, light exercise', avoid: 'Complex problem solving' },
+  26: { detailedPhase: 'Late Luteal (PME)', hormoneState: '↑ P₄, ↓ E₂', cognition: 'Focus still low', optimal: 'Gentle stretching, relaxation', avoid: 'Emotional heavy-lifting' },
+  27: { detailedPhase: 'Late Luteal (PME)', hormoneState: '↑ P₄, ↓ E₂', cognition: 'Nearing menses; mood dipping', optimal: 'Preliminary cycle planning', avoid: 'New commitments' },
+  28: { detailedPhase: 'Late Luteal (PME)', hormoneState: '↑ P₄, ↓ E₂', cognition: 'Lowest pre-menses dynamical complexity', optimal: 'Restorative self-care, light socializing', avoid: 'Big launches or deadlines' }
+};
 
 // Default cycle data for new users
 export const getDefaultCycleData = (): CycleData => {
@@ -33,6 +71,21 @@ const ensureDate = (date: any): Date => {
   // Default to current date if invalid
   console.warn('Invalid date provided, using current date as fallback');
   return new Date();
+};
+
+// Map detailed phase to simple phase
+const mapDetailedPhaseToSimple = (detailedPhase: DetailedCyclePhase): CyclePhase => {
+  switch (detailedPhase) {
+    case 'Early Follicular':
+      return 'follicular';
+    case 'Pre-Ovulatory':
+      return 'ovulation';
+    case 'Mid-Luteal':
+    case 'Late Luteal (PME)':
+      return 'luteal';
+    default:
+      return 'follicular';
+  }
 };
 
 // Calculate the current cycle phase
@@ -81,19 +134,36 @@ export const getDayInfo = (cycleData: CycleData, date: Date): CycleDay => {
   const thisCycleStart = addDays(lastPeriodStart, cycleOffset * cycleData.averageCycleLength);
   const dayOfCycle = Math.floor((safeDate.getTime() - thisCycleStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   
+  // Get phase and detailed info
   const phase = getCyclePhase(cycleData, safeDate);
   const isMenstruation = phase === 'menstrual';
+  
+  // Add detailed info if within standard cycle length
+  let detailedInfo = {};
+  if (dayOfCycle > 0 && dayOfCycle <= 28) {
+    detailedInfo = detailedCycleData[dayOfCycle] || {};
+  }
   
   return {
     date: dateStr,
     phase,
     isMenstruation,
-    dayOfCycle
+    dayOfCycle,
+    ...detailedInfo
   };
 };
 
 // Get a suggestion based on the current cycle phase
-export const getSuggestionForPhase = (phase: CyclePhase): string => {
+export const getSuggestionForPhase = (phase: CyclePhase, dayOfCycle: number): string => {
+  // First try to get a detailed suggestion
+  if (dayOfCycle > 0 && dayOfCycle <= 28) {
+    const detailedData = detailedCycleData[dayOfCycle];
+    if (detailedData) {
+      return detailedData.optimal;
+    }
+  }
+  
+  // Fall back to general suggestions
   const suggestions = {
     menstrual: [
       "Take it easy today. Your body is working hard.",

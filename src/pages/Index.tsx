@@ -58,7 +58,15 @@ const Index = () => {
             className="mb-4"
           />
           
-          <DailySuggestion phase={dayInfo.phase} />
+          <DailySuggestion 
+            phase={dayInfo.phase}
+            dayOfCycle={dayInfo.dayOfCycle}
+            detailedPhase={dayInfo.detailedPhase}
+            hormoneState={dayInfo.hormoneState}
+            cognition={dayInfo.cognition}
+            optimal={dayInfo.optimal}
+            avoid={dayInfo.avoid}
+          />
           
           <CalendarView 
             cycleData={userData.cycleData}
