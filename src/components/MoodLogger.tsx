@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { addMoodEntry } from '@/lib/dataStorage';
 import { toast } from '@/components/ui/use-toast';
 
@@ -10,13 +11,18 @@ const MoodLogger: React.FC = () => {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [customSymptom, setCustomSymptom] = useState('');
   
   const commonSymptoms = [
     'Headache', 'Cramps', 'Bloating', 'Fatigue', 
-    'Backache', 'Breast Tenderness', 'Nausea'
+    'Backache', 'Breast Tenderness', 'Nausea', 'Insomnia',
+    'Acne', 'Mood Swings', 'Anxiety', 'Cravings',
+    'Dizziness', 'Hot Flashes', 'Joint Pain', 'Low Energy'
   ];
   
-  const moodEmojis = ['😞', '😔', '😐', '🙂', '😊'];
+  // Extended emoji options for more expressive mood logging
+  const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄', '🥰', '😭', '😡', '😴'];
+  const moodLabels = ['Very Sad', 'Sad', 'Neutral', 'Good', 'Happy', 'Very Happy', 'Loved', 'Crying', 'Angry', 'Tired'];
   
   const handleMoodSelection = (mood: number) => {
     setSelectedMood(mood);
@@ -30,6 +36,15 @@ const MoodLogger: React.FC = () => {
     }
   };
   
+  const addCustomSymptom = () => {
+    if (customSymptom.trim() === '') return;
+    
+    if (!selectedSymptoms.includes(customSymptom)) {
+      setSelectedSymptoms([...selectedSymptoms, customSymptom]);
+    }
+    setCustomSymptom('');
+  };
+  
   const handleSubmit = () => {
     if (selectedMood === null) {
       toast({
@@ -41,7 +56,7 @@ const MoodLogger: React.FC = () => {
     }
     
     addMoodEntry(
-      selectedMood + 1,  // Convert 0-4 index to 1-5 rating
+      Math.min(5, selectedMood + 1),  // Convert 0-9 index to 1-5 rating (capped at 5 for compatibility)
       notes,
       selectedSymptoms.length > 0 ? selectedSymptoms : undefined
     );
@@ -63,17 +78,18 @@ const MoodLogger: React.FC = () => {
         <CardTitle className="text-lg">How are you feeling today?</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-1">
           {moodEmojis.map((emoji, index) => (
             <button
               key={index}
               onClick={() => handleMoodSelection(index)}
-              className={`text-3xl p-2 rounded-full transition-all ${
+              className={`text-2xl p-2 rounded-full transition-all ${
                 selectedMood === index 
                   ? 'bg-cycle-lavender scale-110' 
                   : 'hover:bg-cycle-soft-purple'
               }`}
-              aria-label={`Select mood ${index + 1}`}
+              aria-label={`Select mood ${moodLabels[index]}`}
+              title={moodLabels[index]}
             >
               {emoji}
             </button>
@@ -89,7 +105,7 @@ const MoodLogger: React.FC = () => {
         
         <div>
           <p className="mb-2 text-sm font-medium">Symptoms (optional)</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-3">
             {commonSymptoms.map((symptom) => (
               <button
                 key={symptom}
@@ -104,6 +120,48 @@ const MoodLogger: React.FC = () => {
               </button>
             ))}
           </div>
+          
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add custom symptom..."
+              value={customSymptom}
+              onChange={(e) => setCustomSymptom(e.target.value)}
+              className="border-cycle-lavender/50"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addCustomSymptom();
+                }
+              }}
+            />
+            <Button 
+              onClick={addCustomSymptom}
+              variant="outline"
+              className="border-cycle-lavender/50 hover:bg-cycle-soft-purple"
+            >
+              Add
+            </Button>
+          </div>
+          
+          {selectedSymptoms.length > 0 && (
+            <div className="mt-3">
+              <p className="text-sm font-medium">Selected symptoms:</p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {selectedSymptoms.map((symptom) => (
+                  <div key={symptom} className="bg-cycle-purple text-white px-3 py-1 text-sm rounded-full flex items-center gap-1">
+                    {symptom}
+                    <button 
+                      onClick={() => toggleSymptom(symptom)}
+                      className="hover:bg-cycle-lavender/30 rounded-full h-4 w-4 flex items-center justify-center"
+                      aria-label={`Remove ${symptom}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
       <CardFooter>

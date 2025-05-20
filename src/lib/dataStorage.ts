@@ -34,10 +34,13 @@ export const addMoodEntry = (
 ): MoodEntry => {
   const userData = loadUserData();
   
+  // Ensure mood is between 1-5 for backward compatibility
+  const normalizedMood = Math.min(5, Math.max(1, mood)) as 1 | 2 | 3 | 4 | 5;
+  
   const newEntry: MoodEntry = {
     id: uuidv4(),
     timestamp: new Date().toISOString(),
-    mood: mood as 1 | 2 | 3 | 4 | 5,
+    mood: normalizedMood,
     notes,
     symptoms
   };
