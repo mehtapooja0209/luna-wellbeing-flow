@@ -2,6 +2,7 @@
 import { UserData, MoodEntry } from './types';
 import { getDefaultCycleData } from './cycleUtils';
 import { v4 as uuidv4 } from 'uuid';
+import { format } from 'date-fns';
 
 // Storage keys
 const USER_DATA_KEY = 'cycle_app_user_data';
@@ -68,10 +69,10 @@ export const updateCycleData = (
 // Get mood entries for a specific date
 export const getMoodEntriesForDate = (date: Date): MoodEntry[] => {
   const userData = loadUserData();
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = format(date, 'yyyy-MM-dd');
   
   return userData.moodEntries.filter(entry => {
-    const entryDate = new Date(entry.timestamp).toISOString().split('T')[0];
+    const entryDate = entry.timestamp.split('T')[0];
     return entryDate === dateStr;
   });
 };
