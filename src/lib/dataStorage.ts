@@ -30,7 +30,8 @@ export const saveUserData = (userData: UserData): void => {
 export const addMoodEntry = (
   mood: number, 
   notes?: string, 
-  symptoms?: string[]
+  symptoms?: string[],
+  moodLabels?: string[]
 ): MoodEntry => {
   const userData = loadUserData();
   
@@ -42,7 +43,8 @@ export const addMoodEntry = (
     timestamp: new Date().toISOString(),
     mood: normalizedMood,
     notes,
-    symptoms
+    symptoms,
+    moodLabels
   };
   
   userData.moodEntries.push(newEntry);

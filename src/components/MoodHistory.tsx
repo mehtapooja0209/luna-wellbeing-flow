@@ -32,7 +32,29 @@ const MoodHistory: React.FC<MoodHistoryProps> = ({ entries }) => {
         {sortedEntries.map((entry) => (
           <div key={entry.id} className="border-b border-cycle-soft-purple pb-3 last:border-0">
             <div className="flex justify-between items-center mb-1">
-              <span className="text-2xl">{getMoodEmoji(entry.mood)}</span>
+              <div className="flex space-x-1">
+                {/* If we have moodLabels, display those instead of the numeric mood */}
+                {entry.moodLabels && entry.moodLabels.length > 0 ? (
+                  <div className="flex space-x-1">
+                    {entry.moodLabels.map((label, idx) => {
+                      // Map mood labels back to their emojis
+                      const moodLabels = [
+                        'Very Sad', 'Sad', 'Neutral', 'Good', 'Happy', 'Very Happy', 'Loved', 'Crying', 'Angry', 'Tired', 
+                        'Anxious', 'Overthinking', 'Exhausted', 'Annoyed', 'Excited', 'Nervous', 'Overwhelmed', 'Vulnerable', 'Peaceful', 'Nauseous'
+                      ];
+                      const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄', '🥰', '😭', '😡', '😴', '😰', '🤔', '😩', '🙄', '🥳', '😬', '🤯', '🥺', '😇', '🤢'];
+                      const emojiIndex = moodLabels.findIndex(l => l === label);
+                      return (
+                        <span key={idx} className="text-2xl" title={label}>
+                          {emojiIndex >= 0 ? moodEmojis[emojiIndex] : '😐'}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <span className="text-2xl">{getMoodEmoji(entry.mood)}</span>
+                )}
+              </div>
               <span className="text-sm text-muted-foreground">
                 {format(new Date(entry.timestamp), 'h:mm a')}
               </span>

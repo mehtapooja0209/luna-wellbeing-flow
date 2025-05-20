@@ -6,9 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { addMoodEntry } from '@/lib/dataStorage';
 import { toast } from '@/components/ui/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { RollerCoaster } from 'lucide-react';
 
 const MoodLogger: React.FC = () => {
-  const [selectedMood, setSelectedMood] = useState<number | null>(null);
+  const [selectedMoods, setSelectedMoods] = useState<number[]>([]);
   const [notes, setNotes] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [customSymptom, setCustomSymptom] = useState('');
@@ -17,15 +19,39 @@ const MoodLogger: React.FC = () => {
     'Headache', 'Cramps', 'Bloating', 'Fatigue', 
     'Backache', 'Breast Tenderness', 'Nausea', 'Insomnia',
     'Acne', 'Mood Swings', 'Anxiety', 'Cravings',
-    'Dizziness', 'Hot Flashes', 'Joint Pain', 'Low Energy'
+    'Dizziness', 'Hot Flashes', 'Joint Pain', 'Low Energy',
+    'Brain Fog', 'Irritability', 'Depression', 'Restlessness',
+    'Sleep Disturbance', 'Constipation', 'Diarrhea', 'Indigestion',
+    'Swelling', 'Weight Gain', 'Skin Changes', 'Hair Changes',
+    'Libido Changes', 'Concentration Issues'
   ];
   
   // Extended emoji options for more expressive mood logging
-  const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄', '🥰', '😭', '😡', '😴'];
-  const moodLabels = ['Very Sad', 'Sad', 'Neutral', 'Good', 'Happy', 'Very Happy', 'Loved', 'Crying', 'Angry', 'Tired'];
+  const moodEmojis = ['😞', '😔', '😐', '🙂', '😊', '😄', '🥰', '😭', '😡', '😴', '😰', '🤔', '😩', '🙄', '🥳', '😬', '🤯', '🥺', '😇', '🤢'];
+  const moodLabels = [
+    'Very Sad', 'Sad', 'Neutral', 'Good', 'Happy', 'Very Happy', 'Loved', 'Crying', 'Angry', 'Tired', 
+    'Anxious', 'Overthinking', 'Exhausted', 'Annoyed', 'Excited', 'Nervous', 'Overwhelmed', 'Vulnerable', 'Peaceful', 'Nauseous'
+  ];
   
-  const handleMoodSelection = (mood: number) => {
-    setSelectedMood(mood);
+  const handleMoodSelection = (moodIndex: number) => {
+    // If already selected, remove it
+    if (selectedMoods.includes(moodIndex)) {
+      setSelectedMoods(selectedMoods.filter(index => index !== moodIndex));
+      return;
+    }
+    
+    // If 3 moods are already selected, show toast and return
+    if (selectedMoods.length >= 3) {
+      toast({
+        title: "Maximum moods selected",
+        description: "You can select up to 3 moods",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Add the new mood
+    setSelectedMoods([...selectedMoods, moodIndex]);
   };
   
   const toggleSymptom = (symptom: string) => {
@@ -46,23 +72,30 @@ const MoodLogger: React.FC = () => {
   };
   
   const handleSubmit = () => {
-    if (selectedMood === null) {
+    if (selectedMoods.length === 0) {
       toast({
         title: "Mood required",
-        description: "Please select a mood before saving",
+        description: "Please select at least one mood before saving",
         variant: "destructive"
       });
       return;
     }
     
+    // Get the primary mood (first selected) for backward compatibility
+    const primaryMoodValue = Math.min(5, selectedMoods[0] + 1);
+    
+    // Create an array of all selected mood labels
+    const selectedMoodLabels = selectedMoods.map(index => moodLabels[index]);
+    
     addMoodEntry(
-      Math.min(5, selectedMood + 1),  // Convert 0-9 index to 1-5 rating (capped at 5 for compatibility)
+      primaryMoodValue,  // Convert 0-9 index to 1-5 rating (capped at 5 for compatibility)
       notes,
-      selectedSymptoms.length > 0 ? selectedSymptoms : undefined
+      selectedSymptoms.length > 0 ? selectedSymptoms : undefined,
+      selectedMoodLabels // Pass the mood labels
     );
     
     // Reset form
-    setSelectedMood(null);
+    setSelectedMoods([]);
     setNotes('');
     setSelectedSymptoms([]);
     
@@ -76,24 +109,35 @@ const MoodLogger: React.FC = () => {
     <Card className="shadow-md border-none bg-white/90 backdrop-blur-sm">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">How are you feeling today?</CardTitle>
+        <p className="text-sm text-muted-foreground">Select up to 3 moods that represent how you feel</p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap justify-between items-center gap-1">
-          {moodEmojis.map((emoji, index) => (
-            <button
-              key={index}
-              onClick={() => handleMoodSelection(index)}
-              className={`text-2xl p-2 rounded-full transition-all ${
-                selectedMood === index 
-                  ? 'bg-cycle-lavender scale-110' 
-                  : 'hover:bg-cycle-soft-purple'
-              }`}
-              aria-label={`Select mood ${moodLabels[index]}`}
-              title={moodLabels[index]}
-            >
-              {emoji}
-            </button>
-          ))}
+          <TooltipProvider>
+            {moodEmojis.map((emoji, index) => (
+              <Tooltip key={index}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => handleMoodSelection(index)}
+                    className={`text-2xl p-2 rounded-full transition-all ${
+                      selectedMoods.includes(index) 
+                        ? 'bg-cycle-lavender scale-110' 
+                        : 'hover:bg-cycle-soft-purple'
+                    }`}
+                    aria-label={`Select mood ${moodLabels[index]}`}
+                  >
+                    {emoji}
+                    {moodLabels[index] === 'Overthinking' && (
+                      <RollerCoaster className="inline ml-1" size={16} />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {moodLabels[index]}
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </TooltipProvider>
         </div>
         
         <Textarea

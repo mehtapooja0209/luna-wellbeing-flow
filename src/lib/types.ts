@@ -16,6 +16,7 @@ export type MoodEntry = {
   mood: MoodRating;
   notes?: string;
   symptoms?: string[];
+  moodLabels?: string[]; // Added to store multiple mood labels
 };
 
 export type CycleDay = {
