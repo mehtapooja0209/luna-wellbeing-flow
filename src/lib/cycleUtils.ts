@@ -14,16 +14,40 @@ export const getDefaultCycleData = (): CycleData => {
   };
 };
 
+// Ensure we have a valid Date object
+const ensureDate = (date: any): Date => {
+  if (date instanceof Date) {
+    return date;
+  }
+  // Try to parse string date
+  if (typeof date === 'string') {
+    try {
+      const parsedDate = new Date(date);
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate;
+      }
+    } catch (e) {
+      console.error('Error parsing date string:', e);
+    }
+  }
+  // Default to current date if invalid
+  console.warn('Invalid date provided, using current date as fallback');
+  return new Date();
+};
+
 // Calculate the current cycle phase
 export const getCyclePhase = (cycleData: CycleData, date: Date): CyclePhase => {
-  const dateStr = format(date, 'yyyy-MM-dd');
+  // Ensure date is a valid Date object
+  const safeDate = ensureDate(date);
+  const dateStr = format(safeDate, 'yyyy-MM-dd');
+  
   if (cycleData.entries[dateStr]) {
     return cycleData.entries[dateStr].phase;
   }
 
   // If we don't have precalculated data, calculate on the fly
   const lastPeriodStart = parseISO(cycleData.lastPeriodStart);
-  const daysSinceLastPeriod = Math.floor((date.getTime() - lastPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
+  const daysSinceLastPeriod = Math.floor((safeDate.getTime() - lastPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
   
   // Adjust for cycle repeating
   const dayInCycle = ((daysSinceLastPeriod % cycleData.averageCycleLength) + cycleData.averageCycleLength) % cycleData.averageCycleLength;
@@ -41,8 +65,8 @@ export const getCyclePhase = (cycleData: CycleData, date: Date): CyclePhase => {
 
 // Get information about the current day in the cycle
 export const getDayInfo = (cycleData: CycleData, date: Date): CycleDay => {
-  // Ensure date is a Date object
-  const safeDate = date instanceof Date ? date : new Date();
+  // Ensure date is a valid Date object
+  const safeDate = ensureDate(date);
   const dateStr = format(safeDate, 'yyyy-MM-dd');
   
   if (cycleData.entries[dateStr]) {
@@ -107,8 +131,8 @@ export const getSuggestionForPhase = (phase: CyclePhase): string => {
 
 // Function to get a moon phase emoji representation (simplified)
 export const getMoonPhaseEmoji = (cycleData: CycleData, date: Date): string => {
-  // Ensure date is a Date object
-  const safeDate = date instanceof Date ? date : new Date();
+  // Ensure date is a valid Date object
+  const safeDate = ensureDate(date);
   const { dayOfCycle } = getDayInfo(cycleData, safeDate);
   const totalPhases = 8; // Simplified moon representation with 8 phases
   const phaseIndex = Math.floor((dayOfCycle - 1) / cycleData.averageCycleLength * totalPhases) % totalPhases;

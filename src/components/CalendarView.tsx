@@ -107,6 +107,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
               >
                 <span>{day.dayOfMonth}</span>
                 <span className="text-xs">
+                  {/* Ensure a Date object is passed to getMoonPhaseEmoji */}
                   {getMoonPhaseEmoji(cycleData, day.date)}
                 </span>
                 {day.isMenstruation && (
