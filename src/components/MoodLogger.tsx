@@ -1,13 +1,15 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { addMoodEntry, getSavedSymptoms } from '@/lib/dataStorage';
 import MoodEmojiSelector from './mood/MoodEmojiSelector';
 import SymptomSelector from './mood/SymptomSelector';
 import VoiceInput from './VoiceInput';
+import { MoodRating } from '@/lib/types';
 
 interface MoodLoggerProps {
   onEntryAdded?: () => void;
@@ -18,7 +20,7 @@ const MoodLogger: React.FC<MoodLoggerProps> = ({
   onEntryAdded,
   selectedDate = new Date() // Default to today
 }) => {
-  const [mood, setMood] = useState<number | null>(null);
+  const [mood, setMood] = useState<MoodRating | null>(null);
   const [notes, setNotes] = useState('');
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [showSymptoms, setShowSymptoms] = useState(false);
@@ -91,7 +93,7 @@ const MoodLogger: React.FC<MoodLoggerProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <MoodEmojiSelector selectedMood={mood} onSelectMood={setMood} />
+          <MoodEmojiSelector selectedMood={mood as number | null} onSelect={setMood} />
           
           <Textarea 
             placeholder="Add notes about how you're feeling..."
@@ -118,7 +120,7 @@ const MoodLogger: React.FC<MoodLoggerProps> = ({
           ) : (
             <SymptomSelector
               selectedSymptoms={symptoms}
-              onSelectSymptoms={setSymptoms}
+              onSelect={(selected) => setSymptoms(selected)}
               availableSymptoms={getSavedSymptoms()}
             />
           )}
