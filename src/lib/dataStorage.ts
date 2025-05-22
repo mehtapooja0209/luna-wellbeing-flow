@@ -1,8 +1,8 @@
 
-import { UserData, MoodEntry } from './types';
+import { UserData, MoodEntry, Reminder, CycleDay } from './types';
 import { getDefaultCycleData } from './cycleUtils';
 import { v4 as uuidv4 } from 'uuid';
-import { format, parseISO, isEqual } from 'date-fns';
+import { format, parseISO, isEqual, addDays, isBefore } from 'date-fns';
 
 // Storage keys
 const USER_DATA_KEY = 'cycle_app_user_data';
@@ -32,7 +32,8 @@ export const addMoodEntry = (
   mood: number, 
   notes?: string, 
   symptoms?: string[],
-  moodLabels?: string[]
+  moodLabels?: string[],
+  timestamp?: string // Optional parameter for adding entries for past dates
 ): MoodEntry => {
   const userData = loadUserData();
   
@@ -41,7 +42,7 @@ export const addMoodEntry = (
   
   const newEntry: MoodEntry = {
     id: uuidv4(),
-    timestamp: new Date().toISOString(),
+    timestamp: timestamp || new Date().toISOString(), // Use provided timestamp or current time
     mood: normalizedMood,
     notes,
     symptoms,
@@ -116,3 +117,152 @@ export const removeSavedSymptom = (symptom: string): string[] => {
   
   return userData.savedSymptoms || [];
 };
+
+// New functions for reminders
+export const addReminder = (date: Date, reminder: Omit<Reminder, 'id'>): Reminder => {
+  const userData = loadUserData();
+  const dateStr = format(date, 'yyyy-MM-dd');
+  
+  // Create or get the entry for this date
+  if (!userData.cycleData.entries[dateStr]) {
+    const dayInfo = getDayInfo(userData.cycleData, date);
+    userData.cycleData.entries[dateStr] = dayInfo;
+  }
+  
+  // Initialize reminders array if it doesn't exist
+  if (!userData.cycleData.entries[dateStr].reminders) {
+    userData.cycleData.entries[dateStr].reminders = [];
+  }
+  
+  const newReminder: Reminder = {
+    id: uuidv4(),
+    ...reminder,
+    isCompleted: false
+  };
+  
+  userData.cycleData.entries[dateStr].reminders!.push(newReminder);
+  saveUserData(userData);
+  
+  return newReminder;
+};
+
+export const updateReminder = (date: Date, reminderId: string, updates: Partial<Reminder>): boolean => {
+  const userData = loadUserData();
+  const dateStr = format(date, 'yyyy-MM-dd');
+  
+  if (!userData.cycleData.entries[dateStr]?.reminders) {
+    return false;
+  }
+  
+  const reminderIndex = userData.cycleData.entries[dateStr].reminders!
+    .findIndex(r => r.id === reminderId);
+    
+  if (reminderIndex === -1) {
+    return false;
+  }
+  
+  userData.cycleData.entries[dateStr].reminders![reminderIndex] = {
+    ...userData.cycleData.entries[dateStr].reminders![reminderIndex],
+    ...updates
+  };
+  
+  saveUserData(userData);
+  return true;
+};
+
+export const removeReminder = (date: Date, reminderId: string): boolean => {
+  const userData = loadUserData();
+  const dateStr = format(date, 'yyyy-MM-dd');
+  
+  if (!userData.cycleData.entries[dateStr]?.reminders) {
+    return false;
+  }
+  
+  userData.cycleData.entries[dateStr].reminders = 
+    userData.cycleData.entries[dateStr].reminders!.filter(r => r.id !== reminderId);
+    
+  saveUserData(userData);
+  return true;
+};
+
+export const getRemindersForDate = (date: Date): Reminder[] => {
+  const userData = loadUserData();
+  const dateStr = format(date, 'yyyy-MM-dd');
+  
+  return userData.cycleData.entries[dateStr]?.reminders || [];
+};
+
+// Track chronic condition symptoms
+export const addChronicCondition = (condition: string): string[] => {
+  const userData = loadUserData();
+  
+  if (!userData.chronicConditions) {
+    userData.chronicConditions = [];
+  }
+  
+  if (!userData.chronicConditions.includes(condition)) {
+    userData.chronicConditions.push(condition);
+    saveUserData(userData);
+  }
+  
+  return userData.chronicConditions;
+};
+
+export const removeChronicCondition = (condition: string): string[] => {
+  const userData = loadUserData();
+  
+  if (userData.chronicConditions) {
+    userData.chronicConditions = userData.chronicConditions.filter(c => c !== condition);
+    saveUserData(userData);
+  }
+  
+  return userData.chronicConditions || [];
+};
+
+export const getChronicConditions = (): string[] => {
+  const userData = loadUserData();
+  return userData.chronicConditions || [];
+};
+
+export const trackSymptomForDate = (date: Date, symptom: string): void => {
+  const userData = loadUserData();
+  const dateStr = format(date, 'yyyy-MM-dd');
+  
+  // Create or get the entry for this date
+  if (!userData.cycleData.entries[dateStr]) {
+    const dayInfo = getDayInfo(userData.cycleData, date);
+    userData.cycleData.entries[dateStr] = dayInfo;
+  }
+  
+  // Initialize symptoms array if it doesn't exist
+  if (!userData.cycleData.entries[dateStr].symptoms) {
+    userData.cycleData.entries[dateStr].symptoms = [];
+  }
+  
+  // Add symptom if it doesn't already exist
+  if (!userData.cycleData.entries[dateStr].symptoms!.includes(symptom)) {
+    userData.cycleData.entries[dateStr].symptoms!.push(symptom);
+    saveUserData(userData);
+  }
+};
+
+export const removeSymptomFromDate = (date: Date, symptom: string): void => {
+  const userData = loadUserData();
+  const dateStr = format(date, 'yyyy-MM-dd');
+  
+  if (userData.cycleData.entries[dateStr]?.symptoms) {
+    userData.cycleData.entries[dateStr].symptoms = 
+      userData.cycleData.entries[dateStr].symptoms!.filter(s => s !== symptom);
+    saveUserData(userData);
+  }
+};
+
+export const getSymptomsForDate = (date: Date): string[] => {
+  const userData = loadUserData();
+  const dateStr = format(date, 'yyyy-MM-dd');
+  
+  return userData.cycleData.entries[dateStr]?.symptoms || [];
+};
+
+// Import needed for getDayInfo (circular dependency handled by hoisting)
+import { getDayInfo } from './cycleUtils';

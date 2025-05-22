@@ -1,129 +1,137 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { addMoodEntry, getSavedSymptoms, addSavedSymptom, removeSavedSymptom } from '@/lib/dataStorage';
-import { toast } from '@/components/ui/use-toast';
-import MoodEmojiSelector, { moodLabels } from './mood/MoodEmojiSelector';
+import { toast } from '@/components/ui/sonner';
+import { format } from 'date-fns';
+import { addMoodEntry, getSavedSymptoms } from '@/lib/dataStorage';
+import MoodEmojiSelector from './mood/MoodEmojiSelector';
 import SymptomSelector from './mood/SymptomSelector';
+import VoiceInput from './VoiceInput';
 
-const MoodLogger: React.FC = () => {
-  const [selectedMoods, setSelectedMoods] = useState<number[]>([]);
+interface MoodLoggerProps {
+  onEntryAdded?: () => void;
+  selectedDate?: Date; // Optional, defaults to today if not provided
+}
+
+const MoodLogger: React.FC<MoodLoggerProps> = ({ 
+  onEntryAdded,
+  selectedDate = new Date() // Default to today
+}) => {
+  const [mood, setMood] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [savedSymptoms, setSavedSymptoms] = useState<string[]>([]);
+  const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [showSymptoms, setShowSymptoms] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   
-  // Load saved symptoms on component mount
-  useEffect(() => {
-    setSavedSymptoms(getSavedSymptoms());
-  }, []);
-  
-  const handleMoodSelection = (moodIndex: number) => {
-    setSelectedMoods(prev => 
-      prev.includes(moodIndex) 
-        ? prev.filter(index => index !== moodIndex)
-        : [...prev, moodIndex]
-    );
-  };
-  
-  const toggleSymptom = (symptom: string) => {
-    setSelectedSymptoms(prev => 
-      prev.includes(symptom)
-        ? prev.filter(s => s !== symptom)
-        : [...prev, symptom]
-    );
-  };
-  
-  const handleSaveSymptom = (symptom: string) => {
-    const updatedSavedSymptoms = addSavedSymptom(symptom);
-    setSavedSymptoms(updatedSavedSymptoms);
-    
-    toast({
-      title: "Symptom saved",
-      description: `"${symptom}" added to your saved symptoms`,
-    });
-  };
-  
-  const handleRemoveSavedSymptom = (symptom: string) => {
-    const updatedSavedSymptoms = removeSavedSymptom(symptom);
-    setSavedSymptoms(updatedSavedSymptoms);
-    
-    toast({
-      title: "Symptom removed",
-      description: `"${symptom}" removed from your saved symptoms`,
-    });
+  const isBackdated = selectedDate.toDateString() !== new Date().toDateString();
+
+  const handleVoiceInput = (text: string) => {
+    setNotes(text);
   };
   
   const handleSubmit = () => {
-    if (selectedMoods.length === 0) {
+    if (mood === null) {
       toast({
-        title: "Mood required",
-        description: "Please select at least one mood before saving",
+        title: "Missing Information",
+        description: "Please select a mood before saving.",
         variant: "destructive"
       });
       return;
     }
     
-    // Get the primary mood (first selected) for backward compatibility
-    const primaryMoodValue = Math.min(5, selectedMoods[0] + 1);
+    setIsAdding(true);
     
-    // Create an array of all selected mood labels
-    const selectedMoodLabels = selectedMoods.map(index => moodLabels[index]);
-    
-    addMoodEntry(
-      primaryMoodValue,  // Convert 0-9 index to 1-5 rating (capped at 5 for compatibility)
-      notes,
-      selectedSymptoms.length > 0 ? selectedSymptoms : undefined,
-      selectedMoodLabels // Pass the mood labels
-    );
-    
-    // Reset form
-    setSelectedMoods([]);
-    setNotes('');
-    setSelectedSymptoms([]);
-    
-    toast({
-      title: "Mood logged",
-      description: "Your mood entry has been saved",
-    });
+    try {
+      // Use date from selectedDate but keep current time
+      const timestamp = isBackdated
+        ? `${format(selectedDate, 'yyyy-MM-dd')}T${format(new Date(), 'HH:mm:ss.SSS')}Z`
+        : undefined;
+      
+      addMoodEntry(mood, notes, symptoms.length > 0 ? symptoms : undefined, undefined, timestamp);
+      
+      toast({
+        title: "Entry Saved",
+        description: isBackdated 
+          ? `Entry added for ${format(selectedDate, 'MMMM d')}` 
+          : "Your mood entry has been saved!",
+      });
+      
+      setMood(null);
+      setNotes('');
+      setSymptoms([]);
+      setShowSymptoms(false);
+      
+      if (onEntryAdded) {
+        onEntryAdded();
+      }
+    } catch (error) {
+      console.error("Error saving mood entry:", error);
+      toast({
+        title: "Error",
+        description: "Unable to save your mood entry. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   return (
     <Card className="shadow-md border-none bg-white/90 backdrop-blur-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg">How are you feeling today?</CardTitle>
-        <p className="text-sm text-muted-foreground">Select up to 3 moods that represent how you feel</p>
+        <CardTitle className="text-lg flex items-center justify-between">
+          {isBackdated 
+            ? `Log Mood for ${format(selectedDate, 'MMMM d')}` 
+            : "How are you feeling today?"}
+          {isBackdated && (
+            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">Past Date</span>
+          )}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <MoodEmojiSelector 
-          selectedMoods={selectedMoods} 
-          onMoodSelect={handleMoodSelection} 
-        />
-        
-        <Textarea
-          placeholder="Add notes about how you feel today... (optional)"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="min-h-[80px] border-cycle-lavender/50"
-        />
-        
-        <SymptomSelector 
-          selectedSymptoms={selectedSymptoms}
-          savedSymptoms={savedSymptoms}
-          onToggleSymptom={toggleSymptom}
-          onSaveSymptom={handleSaveSymptom}
-          onRemoveSavedSymptom={handleRemoveSavedSymptom}
-        />
+      <CardContent>
+        <div className="space-y-4">
+          <MoodEmojiSelector selectedMood={mood} onSelectMood={setMood} />
+          
+          <Textarea 
+            placeholder="Add notes about how you're feeling..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="resize-none"
+            rows={3}
+          />
+          
+          <VoiceInput 
+            onTranscript={handleVoiceInput} 
+            placeholder="Or use voice input to describe how you feel"
+            buttonLabel="Speak to describe how you feel"
+          />
+
+          {!showSymptoms ? (
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => setShowSymptoms(true)}
+            >
+              Add Symptoms
+            </Button>
+          ) : (
+            <SymptomSelector
+              selectedSymptoms={symptoms}
+              onSelectSymptoms={setSymptoms}
+              availableSymptoms={getSavedSymptoms()}
+            />
+          )}
+          
+          <Button
+            className="w-full"
+            disabled={mood === null || isAdding}
+            onClick={handleSubmit}
+          >
+            {isAdding ? "Saving..." : isBackdated ? "Save Backdated Entry" : "Save Entry"}
+          </Button>
+        </div>
       </CardContent>
-      <CardFooter>
-        <Button 
-          onClick={handleSubmit} 
-          className="w-full bg-cycle-lavender hover:bg-cycle-purple"
-        >
-          Save Entry
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

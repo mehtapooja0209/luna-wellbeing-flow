@@ -94,6 +94,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         <div className="grid grid-cols-7 gap-1">
           {calendarDays.map((day, i) => {
             const phaseColorClass = getPhaseColorClass(day.phase);
+            const hasReminder = cycleData.entries[format(day.date, 'yyyy-MM-dd')]?.reminders?.length > 0;
+            
             return (
               <button
                 key={i}
@@ -113,6 +115,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                 </span>
                 {day.isMenstruation && (
                   <span className="absolute bottom-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />
+                )}
+                {hasReminder && (
+                  <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-blue-500 rounded-full" />
                 )}
               </button>
             );
