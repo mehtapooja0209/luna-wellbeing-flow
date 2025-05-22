@@ -11,6 +11,7 @@ import CyclePhaseIndicator from '@/components/CyclePhaseIndicator';
 import DailySuggestion from '@/components/DailySuggestion';
 import MoodLogger from '@/components/MoodLogger';
 import MoodHistory from '@/components/MoodHistory';
+import MoodGraph from '@/components/MoodGraph';
 import CalendarView from '@/components/CalendarView';
 import CycleSetupDialog from '@/components/CycleSetupDialog';
 
@@ -75,6 +76,8 @@ const Index = () => {
           />
           
           <MoodLogger />
+          
+          <MoodGraph entries={userData.moodEntries} days={14} />
           
           <MoodHistory entries={moodEntries} />
         </div>

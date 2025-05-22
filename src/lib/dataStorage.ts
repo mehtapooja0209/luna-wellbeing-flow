@@ -17,7 +17,8 @@ export const loadUserData = (): UserData => {
   // Return default data for new users
   return {
     cycleData: getDefaultCycleData(),
-    moodEntries: []
+    moodEntries: [],
+    savedSymptoms: [] // Initialize saved symptoms as empty array
   };
 };
 
@@ -80,4 +81,38 @@ export const getMoodEntriesForDate = (date: Date): MoodEntry[] => {
     const entryDate = entry.timestamp.split('T')[0];
     return entryDate === dateStr;
   });
+};
+
+// Add new functions for saved symptoms
+export const getSavedSymptoms = (): string[] => {
+  const userData = loadUserData();
+  return userData.savedSymptoms || [];
+};
+
+export const addSavedSymptom = (symptom: string): string[] => {
+  const userData = loadUserData();
+  
+  // Initialize if not exists
+  if (!userData.savedSymptoms) {
+    userData.savedSymptoms = [];
+  }
+  
+  // Check if symptom already exists
+  if (!userData.savedSymptoms.includes(symptom)) {
+    userData.savedSymptoms.push(symptom);
+    saveUserData(userData);
+  }
+  
+  return userData.savedSymptoms;
+};
+
+export const removeSavedSymptom = (symptom: string): string[] => {
+  const userData = loadUserData();
+  
+  if (userData.savedSymptoms) {
+    userData.savedSymptoms = userData.savedSymptoms.filter(s => s !== symptom);
+    saveUserData(userData);
+  }
+  
+  return userData.savedSymptoms || [];
 };

@@ -43,4 +43,5 @@ export type UserData = {
   name?: string;
   cycleData: CycleData;
   moodEntries: MoodEntry[];
+  savedSymptoms?: string[]; // Added for permanent user symptoms
 };
