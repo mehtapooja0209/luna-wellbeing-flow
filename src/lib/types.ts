@@ -19,14 +19,6 @@ export type MoodEntry = {
   moodLabels?: string[]; // Added to store multiple mood labels
 };
 
-export type Reminder = {
-  id: string;
-  title: string;
-  description?: string;
-  time?: string; // Time in HH:MM format
-  isCompleted: boolean;
-};
-
 export type CycleDay = {
   date: string;
   phase: CyclePhase;
@@ -37,8 +29,6 @@ export type CycleDay = {
   cognition?: string;
   optimal?: string;
   avoid?: string;
-  reminders?: Reminder[];
-  symptoms?: string[]; // For tracking symptoms on specific days
 };
 
 export type CycleData = {
@@ -54,5 +44,4 @@ export type UserData = {
   cycleData: CycleData;
   moodEntries: MoodEntry[];
   savedSymptoms?: string[]; // Added for permanent user symptoms
-  chronicConditions?: string[]; // Added for tracking chronic conditions
 };

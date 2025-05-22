@@ -8,7 +8,8 @@ import {
   isSameMonth,
   isSameDay,
   addMonths,
-  subMonths
+  subMonths,
+  parseISO
 } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -61,12 +62,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   // Organize in weeks for rendering
   const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-  const formattedDate = (date: Date) => format(date, 'yyyy-MM-dd');
-  const hasReminder = (date: Date) => {
-    const dateStr = formattedDate(date);
-    return cycleData.entries[dateStr]?.reminders?.length > 0;
-  };
-
   return (
     <Card className="shadow-md border-none bg-white/90 backdrop-blur-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -99,8 +94,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         <div className="grid grid-cols-7 gap-1">
           {calendarDays.map((day, i) => {
             const phaseColorClass = getPhaseColorClass(day.phase);
-            const hasReminderForDay = hasReminder(day.date);
-            
             return (
               <button
                 key={i}
@@ -120,9 +113,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                 </span>
                 {day.isMenstruation && (
                   <span className="absolute bottom-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />
-                )}
-                {hasReminderForDay && (
-                  <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-blue-500 rounded-full" />
                 )}
               </button>
             );
