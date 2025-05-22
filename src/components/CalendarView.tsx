@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CycleData } from '@/lib/types';
 import { getDayInfo, getPhaseColorClass, getMoonPhaseEmoji } from '@/lib/cycleUtils';
+import { stringToDate } from '@/lib/dateUtils';
 
 interface CalendarViewProps {
   cycleData: CycleData;
