@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { addMoodEntry, getSavedSymptoms, addSavedSymptom, removeSavedSymptom } from '@/lib/dataStorage';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import MoodEmojiSelector, { moodLabels } from './mood/MoodEmojiSelector';
 import SymptomSelector from './mood/SymptomSelector';
 
