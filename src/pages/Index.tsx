@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { loadUserData } from '@/lib/dataStorage';
@@ -67,45 +68,56 @@ const Index = () => {
   
   return (
     <div className="min-h-screen cycle-bg-gradient">
-      <div className="container max-w-md mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         <AppHeader 
           date={selectedDate} 
           cycleData={userData.cycleData}
           onOpenSetup={() => setIsSetupOpen(true)}
         />
         
-        <div className="space-y-6 animate-fade-in">
-          <CyclePhaseIndicator 
-            phase={dayInfo.phase} 
-            dayOfCycle={dayInfo.dayOfCycle}
-            className="mb-4"
-          />
-          
-          <DailySuggestion 
-            phase={dayInfo.phase}
-            dayOfCycle={dayInfo.dayOfCycle}
-            detailedPhase={dayInfo.detailedPhase}
-            hormoneState={dayInfo.hormoneState}
-            cognition={dayInfo.cognition}
-            optimal={dayInfo.optimal}
-            avoid={dayInfo.avoid}
-          />
+        <div className="animate-fade-in">
+          {/* Top section - always full width */}
+          <div className="space-y-6 mb-6">
+            <CyclePhaseIndicator 
+              phase={dayInfo.phase} 
+              dayOfCycle={dayInfo.dayOfCycle}
+            />
+            
+            <DailySuggestion 
+              phase={dayInfo.phase}
+              dayOfCycle={dayInfo.dayOfCycle}
+              detailedPhase={dayInfo.detailedPhase}
+              hormoneState={dayInfo.hormoneState}
+              cognition={dayInfo.cognition}
+              optimal={dayInfo.optimal}
+              avoid={dayInfo.avoid}
+            />
 
-          <HormoneGraph cycleData={userData.cycleData} />
-          
-          <CalendarView 
-            cycleData={userData.cycleData}
-            selectedDate={selectedDate}
-            onSelectDate={handleDateSelect}
-          />
+            <HormoneGraph cycleData={userData.cycleData} />
+          </div>
 
-          <TrackingSelector onTrackingChange={setTrackingType} />
-          
-          {renderTrackingComponent()}
-          
-          <MoodGraph entries={userData.moodEntries} days={14} />
-          
-          <MoodHistory entries={moodEntries} />
+          {/* Responsive layout - side by side on larger screens */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="space-y-6">
+              <CalendarView 
+                cycleData={userData.cycleData}
+                selectedDate={selectedDate}
+                onSelectDate={handleDateSelect}
+              />
+              
+              <MoodGraph entries={userData.moodEntries} days={14} />
+            </div>
+            
+            <div className="space-y-6">
+              <TrackingSelector onTrackingChange={setTrackingType} />
+              {renderTrackingComponent()}
+            </div>
+          </div>
+
+          {/* Bottom section - mood history */}
+          <div className="space-y-6">
+            <MoodHistory entries={moodEntries} />
+          </div>
         </div>
         
         <CycleSetupDialog 

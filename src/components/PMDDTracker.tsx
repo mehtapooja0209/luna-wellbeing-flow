@@ -8,34 +8,31 @@ import { addMoodEntry } from '@/lib/dataStorage';
 import { toast } from '@/hooks/use-toast';
 
 const PMDDTracker: React.FC = () => {
-  const [moodSymptoms, setMoodSymptoms] = useState<Record<string, number>>({});
   const [physicalSymptoms, setPhysicalSymptoms] = useState<Record<string, number>>({});
   const [behavioralSymptoms, setBehavioralSymptoms] = useState<Record<string, number>>({});
-  const [moodNotes, setMoodNotes] = useState('');
+  const [cognitiveSymptoms, setCognitiveSymptoms] = useState<Record<string, number>>({});
   const [physicalNotes, setPhysicalNotes] = useState('');
   const [behavioralNotes, setBehavioralNotes] = useState('');
+  const [cognitiveNotes, setCognitiveNotes] = useState('');
   const [generalNotes, setGeneralNotes] = useState('');
 
-  const moodSymptomsList = [
-    'Depressed/Sad', 'Hopeless', 'Worthless', 'Guilty', 'Anxious/Tense',
-    'Mood Swings', 'Sudden Sad/Tearful', 'Increased Rejection Sensitivity',
-    'Anger/Irritability', 'Increased Interpersonal Conflicts', 'Decreased Interest in Activities',
-    'Difficulty Concentrating', 'Fatigue/Lack of Energy', 'Appetite Changes/Food Cravings',
-    'Sleep Disturbance', 'Feeling Overwhelmed/Out of Control'
-  ];
-
   const physicalSymptomsList = [
-    'Breast Tenderness/Swelling', 'Headaches', 'Joint/Muscle Pain',
-    'Bloating/Weight Gain', 'Swelling of Extremities', 'Hot Flashes',
-    'Nausea', 'Dizziness', 'Acne Flare-ups', 'Changes in Libido',
-    'Increased Urination', 'Constipation', 'Diarrhea'
+    'Breast tenderness', 'Bloating', 'Weight gain', 'Headaches',
+    'Hot flashes', 'Joint/muscle aches', 'Fatigue', 'Sleep problems',
+    'Appetite changes', 'Food cravings', 'Acne', 'Swelling'
   ];
 
   const behavioralSymptomsList = [
-    'Social Withdrawal', 'Increased Arguments', 'Decreased Productivity',
-    'Procrastination', 'Emotional Eating', 'Substance Use Changes',
-    'Sleep Pattern Changes', 'Exercise Avoidance', 'Isolation from Family/Friends',
-    'Increased Sensitivity to Noise/Light', 'Compulsive Behaviors'
+    'Mood swings', 'Irritability', 'Anger/rage', 'Crying spells',
+    'Depression', 'Anxiety', 'Panic attacks', 'Social withdrawal',
+    'Decreased interest', 'Feeling overwhelmed', 'Hopelessness',
+    'Suicidal thoughts'
+  ];
+
+  const cognitiveSymptomsList = [
+    'Confusion', 'Difficulty concentrating', 'Forgetfulness',
+    'Indecisiveness', 'Brain fog', 'Easily distracted',
+    'Mental fatigue', 'Word-finding difficulty'
   ];
 
   const scaleOptions = [
@@ -50,20 +47,20 @@ const PMDDTracker: React.FC = () => {
   const updateSymptomRating = (
     symptom: string, 
     rating: number, 
-    category: 'mood' | 'physical' | 'behavioral'
+    category: 'physical' | 'behavioral' | 'cognitive'
   ) => {
     const setters = {
-      mood: setMoodSymptoms,
       physical: setPhysicalSymptoms,
-      behavioral: setBehavioralSymptoms
+      behavioral: setBehavioralSymptoms,
+      cognitive: setCognitiveSymptoms
     };
     
     setters[category](prev => ({ ...prev, [symptom]: rating }));
   };
 
   const handleSubmit = () => {
-    const allSymptoms = Object.keys({...moodSymptoms, ...physicalSymptoms, ...behavioralSymptoms});
-    const hasData = allSymptoms.length > 0 || moodNotes || physicalNotes || behavioralNotes || generalNotes;
+    const allSymptoms = Object.keys({...physicalSymptoms, ...behavioralSymptoms, ...cognitiveSymptoms});
+    const hasData = allSymptoms.length > 0 || physicalNotes || behavioralNotes || cognitiveNotes || generalNotes;
     
     if (!hasData) {
       toast({
@@ -74,47 +71,47 @@ const PMDDTracker: React.FC = () => {
       return;
     }
 
-    // Calculate average mood rating
-    const ratings = Object.values({...moodSymptoms, ...physicalSymptoms, ...behavioralSymptoms});
+    const ratings = Object.values({...physicalSymptoms, ...behavioralSymptoms, ...cognitiveSymptoms});
     const avgRating = ratings.length > 0 ? Math.round(ratings.reduce((a, b) => a + b, 0) / ratings.length) : 3;
 
     const symptomData = {
-      mood: moodSymptoms,
       physical: physicalSymptoms,
-      behavioral: behavioralSymptoms
+      behavioral: behavioralSymptoms,
+      cognitive: cognitiveSymptoms
     };
 
     const notesData = {
-      moodNotes: moodNotes || 'None',
       physicalNotes: physicalNotes || 'None',
       behavioralNotes: behavioralNotes || 'None',
+      cognitiveNotes: cognitiveNotes || 'None',
       generalNotes: generalNotes || 'None'
     };
 
     addMoodEntry(
       Math.min(5, Math.max(1, avgRating)) as 1 | 2 | 3 | 4 | 5,
-      `PMDD Detailed Tracking\n${JSON.stringify(symptomData, null, 2)}\nNotes: ${JSON.stringify(notesData, null, 2)}`,
+      `PMDD Tracking\n${JSON.stringify(symptomData, null, 2)}\nNotes: ${JSON.stringify(notesData, null, 2)}`,
       allSymptoms,
-      ['PMDD Tracking']
+      ['PMDD']
     );
 
     // Reset form
-    setMoodSymptoms({});
     setPhysicalSymptoms({});
     setBehavioralSymptoms({});
-    setMoodNotes('');
+    setCognitiveSymptoms({});
     setPhysicalNotes('');
     setBehavioralNotes('');
+    setCognitiveNotes('');
     setGeneralNotes('');
 
     toast({
       title: "PMDD assessment logged",
-      description: "Your detailed PMDD tracking data has been saved",
+      description: "Your PMDD tracking data has been saved",
     });
   };
 
   const SymptomSection = ({ 
     title, 
+    emoji,
     symptoms, 
     selectedSymptoms, 
     category,
@@ -122,23 +119,27 @@ const PMDDTracker: React.FC = () => {
     setNotes 
   }: {
     title: string;
+    emoji: string;
     symptoms: string[];
     selectedSymptoms: Record<string, number>;
-    category: 'mood' | 'physical' | 'behavioral';
+    category: 'physical' | 'behavioral' | 'cognitive';
     notes: string;
     setNotes: (notes: string) => void;
   }) => (
     <div className="space-y-3 border-b pb-4">
-      <h4 className="font-medium text-sm">{title}:</h4>
-      <div className="space-y-2 max-h-40 overflow-y-auto">
+      <h4 className="font-medium text-sm flex items-center gap-2">
+        <span>{emoji}</span>
+        {title}:
+      </h4>
+      <div className="space-y-2 max-h-48 overflow-y-auto">
         {symptoms.map((symptom) => (
-          <div key={symptom} className="flex items-center justify-between text-xs">
-            <label className="flex-1 cursor-pointer">{symptom}</label>
+          <div key={symptom} className="flex items-center justify-between text-xs gap-2">
+            <label className="flex-1 cursor-pointer text-left">{symptom}</label>
             <Select 
               value={selectedSymptoms[symptom]?.toString() || ''} 
               onValueChange={(value) => updateSymptomRating(symptom, parseInt(value), category)}
             >
-              <SelectTrigger className="w-20 h-8">
+              <SelectTrigger className="w-24 h-8 text-xs">
                 <SelectValue placeholder="Rate" />
               </SelectTrigger>
               <SelectContent>
@@ -162,23 +163,15 @@ const PMDDTracker: React.FC = () => {
   );
 
   return (
-    <Card className="shadow-md border-none bg-white/90 backdrop-blur-sm">
+    <Card className="shadow-md border-none bg-white/90 backdrop-blur-sm h-fit">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg">📋 PMDD Detailed Tracker</CardTitle>
-        <p className="text-sm text-muted-foreground">Rate each symptom from 0-5 and add notes for each section</p>
+        <CardTitle className="text-lg">🌙 PMDD Symptom Tracker</CardTitle>
+        <p className="text-sm text-muted-foreground">Track your PMDD symptoms with detailed ratings</p>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 max-h-[70vh] overflow-y-auto">
         <SymptomSection 
-          title="😔 Mood & Emotional Symptoms"
-          symptoms={moodSymptomsList}
-          selectedSymptoms={moodSymptoms}
-          category="mood"
-          notes={moodNotes}
-          setNotes={setMoodNotes}
-        />
-
-        <SymptomSection 
-          title="🤕 Physical Symptoms"
+          title="Physical Symptoms"
+          emoji="🩺"
           symptoms={physicalSymptomsList}
           selectedSymptoms={physicalSymptoms}
           category="physical"
@@ -187,18 +180,32 @@ const PMDDTracker: React.FC = () => {
         />
 
         <SymptomSection 
-          title="🔄 Behavioral Changes"
+          title="Behavioral & Mood Changes"
+          emoji="💭"
           symptoms={behavioralSymptomsList}
           selectedSymptoms={behavioralSymptoms}
           category="behavioral"
           notes={behavioralNotes}
           setNotes={setBehavioralNotes}
         />
+
+        <SymptomSection 
+          title="Cognitive Changes"
+          emoji="🧠"
+          symptoms={cognitiveSymptomsList}
+          selectedSymptoms={cognitiveSymptoms}
+          category="cognitive"
+          notes={cognitiveNotes}
+          setNotes={setCognitiveNotes}
+        />
         
         <div className="space-y-2">
-          <h4 className="font-medium text-sm">📝 General Notes:</h4>
+          <h4 className="font-medium text-sm flex items-center gap-2">
+            <span>📝</span>
+            General Notes:
+          </h4>
           <Textarea
-            placeholder="Overall notes: triggers, coping strategies, medications, daily functioning impact..."
+            placeholder="Overall notes: medications, treatments, triggers, coping strategies..."
             value={generalNotes}
             onChange={(e) => setGeneralNotes(e.target.value)}
             className="min-h-[80px] border-cycle-lavender/50"
