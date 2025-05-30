@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { loadUserData } from '@/lib/dataStorage';
@@ -17,6 +16,8 @@ import CycleSetupDialog from '@/components/CycleSetupDialog';
 import HormoneGraph from '@/components/HormoneGraph';
 import TrackingSelector from '@/components/TrackingSelector';
 import PMDDTracker from '@/components/PMDDTracker';
+import PCOSTracker from '@/components/PCOSTracker';
+import ADHDTracker from '@/components/ADHDTracker';
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -56,17 +57,9 @@ const Index = () => {
       case 'pmdd':
         return <PMDDTracker />;
       case 'pcos':
-        return (
-          <div className="p-4 text-center text-muted-foreground">
-            PCOS tracking coming soon...
-          </div>
-        );
+        return <PCOSTracker />;
       case 'adhd':
-        return (
-          <div className="p-4 text-center text-muted-foreground">
-            ADHD & hormone tracking coming soon...
-          </div>
-        );
+        return <ADHDTracker />;
       default:
         return <MoodLogger />;
     }
