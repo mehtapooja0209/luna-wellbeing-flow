@@ -5,6 +5,7 @@ import { loadUserData } from '@/lib/dataStorage';
 import { getDayInfo, getMoonPhaseEmoji } from '@/lib/cycleUtils';
 import { getMoodEntriesForDate } from '@/lib/dataStorage';
 import { Toaster } from '@/components/ui/toaster';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 import AppHeader from '@/components/AppHeader';
 import CyclePhaseIndicator from '@/components/CyclePhaseIndicator';
@@ -68,16 +69,16 @@ const Index = () => {
   
   return (
     <div className="min-h-screen cycle-bg-gradient">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="container mx-auto px-4 py-6 max-w-full">
         <AppHeader 
           date={selectedDate} 
           cycleData={userData.cycleData}
           onOpenSetup={() => setIsSetupOpen(true)}
         />
         
-        <div className="animate-fade-in">
+        <div className="animate-fade-in space-y-6">
           {/* Top section - always full width */}
-          <div className="space-y-6 mb-6">
+          <div className="space-y-6">
             <CyclePhaseIndicator 
               phase={dayInfo.phase} 
               dayOfCycle={dayInfo.dayOfCycle}
@@ -92,26 +93,34 @@ const Index = () => {
               optimal={dayInfo.optimal}
               avoid={dayInfo.avoid}
             />
-
-            <HormoneGraph cycleData={userData.cycleData} />
           </div>
 
-          {/* Responsive layout - side by side on larger screens */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="space-y-6">
-              <CalendarView 
-                cycleData={userData.cycleData}
-                selectedDate={selectedDate}
-                onSelectDate={handleDateSelect}
-              />
+          {/* Resizable layout with proper responsive behavior */}
+          <div className="h-[600px]">
+            <ResizablePanelGroup direction="horizontal" className="rounded-lg border">
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <div className="p-4 space-y-6 h-full overflow-auto">
+                  <CalendarView 
+                    cycleData={userData.cycleData}
+                    selectedDate={selectedDate}
+                    onSelectDate={handleDateSelect}
+                  />
+                  
+                  <HormoneGraph cycleData={userData.cycleData} />
+                </div>
+              </ResizablePanel>
               
-              <MoodGraph entries={userData.moodEntries} days={14} />
-            </div>
-            
-            <div className="space-y-6">
-              <TrackingSelector onTrackingChange={setTrackingType} />
-              {renderTrackingComponent()}
-            </div>
+              <ResizableHandle withHandle />
+              
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <div className="p-4 space-y-6 h-full overflow-auto">
+                  <MoodGraph entries={userData.moodEntries} days={14} />
+                  
+                  <TrackingSelector onTrackingChange={setTrackingType} />
+                  {renderTrackingComponent()}
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </div>
 
           {/* Bottom section - mood history */}

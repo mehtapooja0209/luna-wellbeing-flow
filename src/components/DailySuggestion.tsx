@@ -14,6 +14,21 @@ interface DailySuggestionProps {
   avoid?: string;
 }
 
+const getFoodSuggestions = (phase: CyclePhase): string => {
+  switch (phase) {
+    case 'menstrual':
+      return '🍫 Dark chocolate, iron-rich foods (spinach, lentils), warming foods (ginger tea, soup), magnesium-rich foods (almonds, avocado)';
+    case 'follicular':
+      return '🥗 Fresh fruits and vegetables, lean proteins (chicken, fish), whole grains, fermented foods (yogurt, kimchi)';
+    case 'ovulation':
+      return '🌶️ Anti-inflammatory foods (berries, leafy greens), fiber-rich foods, healthy fats (salmon, walnuts), cooling foods (cucumber, watermelon)';
+    case 'luteal':
+      return '🥜 Complex carbs (quinoa, sweet potatoes), B-vitamin rich foods (eggs, sunflower seeds), calcium-rich foods (dairy, tahini)';
+    default:
+      return '🍎 Balanced nutrition with plenty of fruits and vegetables';
+  }
+};
+
 const DailySuggestion: React.FC<DailySuggestionProps> = ({ 
   phase, 
   dayOfCycle, 
@@ -24,6 +39,7 @@ const DailySuggestion: React.FC<DailySuggestionProps> = ({
   avoid
 }) => {
   const suggestion = optimal || getSuggestionForPhase(phase, dayOfCycle);
+  const foodSuggestion = getFoodSuggestions(phase);
   
   return (
     <Card className="border-none shadow-md bg-white/80 backdrop-blur-sm">
@@ -45,6 +61,11 @@ const DailySuggestion: React.FC<DailySuggestionProps> = ({
         <div>
           <h4 className="font-medium text-sm">Today's Suggestion</h4>
           <p className="text-muted-foreground">{suggestion}</p>
+        </div>
+
+        <div>
+          <h4 className="font-medium text-sm">🍽️ Recommended Foods</h4>
+          <p className="text-muted-foreground text-sm">{foodSuggestion}</p>
         </div>
         
         {avoid && (
